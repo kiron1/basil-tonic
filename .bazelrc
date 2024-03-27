@@ -1,0 +1,45 @@
+
+common --verbose_failures
+common --incompatible_strict_action_env
+
+build --copt=-pedantic
+build --copt=-Wall
+build --copt=-Wextra
+
+build --cxxopt=-std=c++17
+build --ui_event_filters=-info
+
+build:fmt --noverbose_failures
+build:fmt --keep_going
+build:fmt --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect
+build:fmt --output_groups=+rustfmt_checks
+
+build:clippy --noverbose_failures
+build:clippy --keep_going
+build:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
+build:clippy --output_groups=+clippy_checks
+
+build --enable_platform_specific_config
+
+build:linux --build
+
+build:macos --apple_crosstool_top=@local_config_apple_cc//:toolchain
+build:macos --crosstool_top=@local_config_apple_cc//:toolchain
+build:macos --host_crosstool_top=@local_config_apple_cc//:toolchain
+
+build:macos-arm64 --platforms=:arm64-apple-darwin
+build:macos-arm64 --cpu=darwin_arm64
+
+build:macos-amd64 --platforms=:x86_64-apple-darwin
+build:macos-amd64 --cpu=darwin_x86_64
+
+build:release --compilation_mode=opt
+
+build:ci --show_timestamps
+build:ci --curses=no
+
+test --test_output=errors
+test --test_env=HOME
+
+# allow workspace specific user settings
+try-import %workspace%/user.bazelrc
