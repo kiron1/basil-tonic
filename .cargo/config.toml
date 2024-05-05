@@ -1,0 +1,12 @@
+[profile.release]
+codegen-units = 1
+debug = 0
+lto = true
+opt-level = "z"
+strip = true
+
+# Do not depend on vcruntime DLL for Windows.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+[target.i686-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
