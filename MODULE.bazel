@@ -59,6 +59,7 @@ crate.spec(package = "url", version = "2.5")
 
 crate.from_specs(
     name = "crate_index",
+    cargo_config = "//:.cargo/config.toml",
     # generate_binaries = True,
 )
 use_repo(crate, "crate_index")
