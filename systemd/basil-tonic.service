@@ -1,6 +1,6 @@
 [Unit]
 Description=Basil Tonic Service
-Documentation=https://github.com/kiron1/bazel-compile-commands
+Documentation=https://github.com/kiron1/basil-tonic
 After=network-online.target
 Wants=network-online.target
 

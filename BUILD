@@ -71,7 +71,21 @@ pkg_filegroup(
         "@platforms//os:linux": ["//systemd"],
         "//conditions:default": [],
     }),
-    prefix = "/usr",
+    prefix = select({
+        "@platforms//os:macos": "/opt/basil-tonic",
+        "@platforms//os:linux": "/usr",
+        "//conditions:default": "",
+    }),
+)
+
+pkg_filegroup(
+    name = "pkg_files",
+    srcs = [
+        ":usr_files",
+    ] + select({
+        "@platforms//os:macos": ["//launchd"],
+        "//conditions:default": [],
+    }),
 )
 
 pkg_deb(
@@ -83,23 +97,23 @@ pkg_deb(
     built_using = "unzip (6.0.1)",
     data = ":tar",
     description = "Generates compile_commands.json file from a Bazel workspace",
-    homepage = "https://github.com/kiron1/bazel-compile-commands",
+    homepage = "https://github.com/kiron1/basil-tonic",
     maintainer = "Kiron <kiron1@gmail.com>",
-    package = "bazel-compile-commands",
-    package_file_name = "bazel-compile-commands_{version}_{architecture}.deb",
+    package = "basil-tonic",
+    package_file_name = "basil-tonic_{version}_{architecture}.deb",
     package_variables = "@//:variables",
     version_file = "@//:version_file",
 )
 
 pkg_tar(
     name = "tar",
-    srcs = [":usr_files"],
+    srcs = [":pkg_files"],
 )
 
 pkg_zip(
     name = "zip",
-    srcs = [":usr_files"],
-    package_file_name = "bazel-compile-commands_{version}_{os}_{architecture}.zip",
+    srcs = [":pkg_files"],
+    package_file_name = "basil-tonic_{version}_{os}_{architecture}.zip",
     package_variables = "@//:variables",
 )
 
