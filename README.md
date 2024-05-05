@@ -1,6 +1,6 @@
 # Basil tonic - Fresh `compile_commands.json` for your Bazel workspace
 
-![bazel-compile-commands build status of main branch](https://github.com/kiron1/basil-tonic/actions/workflows/main.yaml/badge.svg)
+![basil-tonic build status of main branch](https://github.com/kiron1/basil-tonic/actions/workflows/main.yaml/badge.svg)
 
 Automatically generates `compile_command.json` files for an Bazel workspace
 without modifications. This is the equivalent of _CMAKE_EXPORT_COMPILE_COMMANDS_
@@ -28,7 +28,7 @@ the project compile information via the `compile_commands.json` file.
   https://github.com/kiron1/basil-tonic/releases
 - Install via:
   ```sh
-  sudo dpkg --install bazel-compile-commands_*_amd64.deb
+  sudo dpkg --install basil-tonic_*_amd64.deb
   ```
 - Enable service:
   ```sh
@@ -92,13 +92,13 @@ is finished.
 
 ## Alternative tools
 
-- [`bazel-compile-commands`](https://github.com/kiron1/bazel-compile-commands) -
+- [`basil-tonic`](https://github.com/kiron1/basil-tonic) -
   Sibling project of `basil-tonic`. Generate `compile_commands.json` by
   analysing the Bazel action graph.
 - [Bear](https://github.com/rizsotto/Bear) - Can work when used with the
   [`--spawn_strategy=local`](https://docs.bazel.build/versions/main/user-manual.html#flag--spawn_strategy)
   Bazel flag.
-- [hedronvision/bazel-compile-commands-extractor](https://github.com/hedronvision/bazel-compile-commands-extractor) -
+- [hedronvision/basil-tonic-extractor](https://github.com/hedronvision/basil-tonic-extractor) -
   Can be integrated into Bazel files.
 - [grailbio/bazel-compilation-database](https://github.com/grailbio/bazel-compilation-database) -
   Needs integration into your Bazel files

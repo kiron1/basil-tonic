@@ -1,0 +1,110 @@
+# GitHub Workflows file
+
+name: main
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version `x.y.z` (without leading `v`)'
+        type: string
+        required: true
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        build:
+          - linux
+          # - windows
+        include:
+          - build: linux
+            os: ubuntu-20.04
+          # - build: windows
+          #   os: windows-2019
+          #   config: cl
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Bazel cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel_build_cache
+          key: ${{ runner.os }}-bazel-test-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-test-
+      - name: Run bazel test
+        run: bazel test --config=ci --disk_cache=~/.cache/bazel_build_cache //...
+      - name: Cache cleanup
+        run: ./tools/disk-cache-collect-garbage ~/.cache/bazel_build_cache
+
+  buildpkg:
+    name: Build Release Asset
+    runs-on: ${{ matrix.os }}
+    needs: test
+
+    strategy:
+      matrix:
+        build:
+          - linux
+          - macos-amd64
+        include:
+          - build: linux
+            os: ubuntu-20.04
+            pkg: basil-tonic_${{ github.event.inputs.version || 0 }}_amd64.deb
+          - build: macos-amd64
+            os: macos-latest
+            pkg: basil-tonic_${{ github.event.inputs.version || 0 }}_macos_arm64.zip
+          # - build: windows
+          #   os: windows-2019
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Bazel cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel_build_cache
+          key: ${{ runner.os }}-bazel-buildpkg-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-buildpkg-
+      - name: Build Release Package
+        run: bazel build --config=ci --config=release --//:version=${{ github.event.inputs.version || 0 }} --disk_cache=~/.cache/bazel_build_cache //:pkg
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-bazel-${{ matrix.build }}
+          path: bazel-bin/${{ matrix.pkg }}
+          if-no-files-found: "error"
+      - name: Cache cleanup
+        run: ./tools/disk-cache-collect-garbage ~/.cache/bazel_build_cache
+
+  mkrelease:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: buildpkg
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download pkg artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pkg-*
+          merge-multiple: true
+      - name: Create Release
+        run: |
+          gh release create v${{ github.event.inputs.version }} --generate-notes *.deb *.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

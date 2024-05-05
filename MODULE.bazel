@@ -1,0 +1,108 @@
+module(
+    name = "basil-tonic",
+    version = "0.0.0",
+)
+
+# bazel_dep(name = "apple_support", version = "1.15.1", repo_name = "build_bazel_apple_support")
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "protobuf", version = "26.0", repo_name = "com_google_protobuf")
+bazel_dep(name = "rules_apple", version = "3.5.1", repo_name = "build_bazel_rules_apple")
+bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "rules_java", version = "7.5.0")
+bazel_dep(name = "rules_jvm_external", version = "6.1")
+bazel_dep(name = "rules_license", version = "0.0.8")
+bazel_dep(name = "rules_pkg", version = "0.10.1")
+bazel_dep(name = "rules_proto", version = "6.0.0")
+bazel_dep(name = "rules_python", version = "0.31.0")
+bazel_dep(name = "rules_rust", version = "0.42.1")
+
+# apple_cc_configure = use_extension(
+#     "@build_bazel_apple_support//crosstool:setup.bzl",
+#     "apple_cc_configure_extension",
+# )
+# use_repo(apple_cc_configure, "local_config_apple_cc", "local_config_apple_cc_toolchains")
+# register_toolchains("@local_config_apple_cc_toolchains//:all")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(edition = "2021")
+use_repo(
+    rust,
+    "rust_toolchains",
+)
+
+register_toolchains("@rust_toolchains//:all")
+register_toolchains("//toolchains:prost_toolchain")
+
+crate = use_extension(
+    "@rules_rust//crate_universe:extension.bzl",
+    "crate",
+)
+
+crate.spec(package = "futures-util", version = "0.3")
+crate.spec(package = "libc", version = "0.2")
+crate.spec(package = "prost", version = "0.11")
+crate.spec(package = "prost-types", version = "0.11")
+crate.spec(package = "protoc-gen-prost", version = "0.2")
+crate.spec(package = "protoc-gen-tonic", version = "0.3")
+crate.spec(package = "serde", features = ["derive"], version = "1.0")
+crate.spec(package = "serde_json", version = "1.0")
+crate.spec(package = "thiserror", version = "1.0")
+crate.spec(package = "tokio", features = ["macros", "rt-multi-thread"], version = "1.0")
+crate.spec(package = "tokio-stream", features = ["net", "sync"], version = "0.1")
+crate.spec(package = "tonic", version = "0.9")
+crate.spec(package = "tonic-build", version = "0.9")
+crate.spec(package = "clap", features = ["derive"], version = "4.1")
+crate.spec(package = "tracing", version = "0.1")
+crate.spec(package = "tracing-subscriber", features = ["env-filter"], version = "0.3")
+crate.spec(package = "url", version = "2.4")
+
+crate.from_specs(
+    name = "crate_index",
+    # generate_binaries = True,
+)
+use_repo(crate, "crate_index")
+
+crate.annotation(
+    crate = "protoc-gen-prost",
+    gen_binaries = ["protoc-gen-prost"],
+)
+
+crate.annotation(
+    crate = "protoc-gen-tonic",
+    gen_binaries = ["protoc-gen-tonic"],
+)
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    artifacts = [
+        # This line is an example coordinate, you'd copy-paste your actual dependencies here
+        # from your build.gradle or pom.xml file.
+        # "org.seleniumhq.selenium:selenium-java:4.4.0",
+    ],
+)
+use_repo(maven, "maven")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "io_bazel",
+    sha256 = "8e4d26350d01d2c0847d8ef336eb76f95930f982b7f88bf1a01306b3695e938b",
+    patches = ["//third_party:bazel.patch"],
+    strip_prefix = "bazel-7.1.1",
+    urls = [
+        "https://github.com/bazelbuild/bazel/archive/refs/tags/7.1.1.tar.gz",
+    ],
+)
+
+http_archive(
+    name = "googleapis",
+    build_file = "@io_bazel//third_party/googleapis:BUILD.bazel",
+    # patches = ["//third_party:no-build-files.patch"],
+    patch_cmds = ["find . -mindepth 2 -name 'BUILD' -o -name 'BUILD.bazel' -exec rm {} +"],
+    sha256 = "5bb6b0253ccf64b53d6c7249625a7e3f6c3bc6402abd52d3778bfa48258703a0",
+    strip_prefix = "googleapis-2f9af297c84c55c8b871ba4495e01ade42476c92",
+    urls = [
+        "https://github.com/googleapis/googleapis/archive/2f9af297c84c55c8b871ba4495e01ade42476c92.tar.gz",
+    ],
+)
